@@ -1,0 +1,161 @@
+import React, { Component } from 'react';
+import { 
+    StyledLi, 
+    StyledUl, 
+    StyledDiv, 
+    StyledTitle, 
+    FrequencyTitle, 
+    WrapperDiv, 
+    StyledButton, 
+    CharCount, 
+    NumberCount, 
+    CountLi, 
+    FrequencyDiv } from '../styles/peoplePage';
+import '../styles/peoplePage.css';
+
+class PeoplePage extends Component {
+    state = {
+        info: [],
+        loaded: false,
+        count: {},
+        display: false
+    }
+
+    componentDidMount = async () => {
+        const data = await this.loadData();
+        const emails = data.data;
+        const counter = {}
+        const newEmails = [];
+        const uniqueChar = [];
+        const sortedArray = [];
+        //Regex'ing the non-alphabetic characters
+        emails.forEach((person) => {
+            const unique = person.email_address.replace(/\_|\@|\.+/g, '');
+            newEmails.push(unique);
+        })
+        //Getting unique letters from email
+        newEmails.forEach(async (email) => {
+            const hii = await this.uniqueLetters(email);
+            uniqueChar.push(hii);
+        })
+        setTimeout(() => {
+            uniqueChar.forEach(async (person) => {
+                for (var i=0; i<person.length;i++) {
+                    const character = person.charAt(i);
+                    if (counter[character] === undefined) {
+                        counter[character] = 1;
+                    } else {
+                        counter[character]++;
+                    }
+                }
+            })
+
+            for (const letter in counter) {
+                sortedArray.push([letter, counter[letter]])
+            }
+            const sorted = sortedArray.sort((a, b) => b[1] - a[1]);
+
+            this.setState({ 
+                info: data, 
+                loaded: true,
+                count: sorted
+            })
+        }, 1000)
+
+    }
+
+    loadData = async () => {
+        const proxyurl = "https://cors-anywhere.herokuapp.com/";
+        const url = 'https://api.salesloft.com/v2/people.json';
+        const apiKey = process.env.REACT_APP_API_KEY;
+        const response = await fetch(proxyurl + url, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            }
+        });
+        const data = response.json();
+        return data;
+    }
+
+    uniqueLetters = async (string) => {
+        let str = string;
+        let newStr = '';
+        for (let i=0; i<str.length; i++) {
+            if(newStr.indexOf(str.charAt(i)) === -1) {
+                newStr += str[i]
+            }
+        }
+        return newStr;
+    }
+
+    handleClick = async () => {
+        const test = document.getElementsByClassName('frequency');
+        if (!this.state.display) {
+            test[0].classList.add('appear');
+            this.setState({ display: true })
+        } else {
+            test[0].classList.remove('appear');
+            this.setState({ display: false })
+        }
+    }
+
+    render() {
+        const { info, loaded, count } = this.state;
+
+        return (
+            loaded !== false ?
+            <WrapperDiv>
+                <StyledDiv>
+                    <StyledUl>
+                        <StyledTitle>Name</StyledTitle>
+                        {info.data.map((person, index) =>
+                            <StyledLi key={`person${index}`}>
+                                {person.first_name}
+                            </StyledLi>
+                        )}
+                    </StyledUl>
+                    <StyledUl>
+                        <StyledTitle>Email</StyledTitle>
+                        {info.data.map((person, index) =>
+                            <StyledLi key={`person${index}`}>
+                                {person.email_address}
+                            </StyledLi>
+                        )}
+                    </StyledUl>
+                    <StyledUl>
+                        <StyledTitle>Job Title</StyledTitle>
+                        {info.data.map((person, index) =>
+                            <StyledLi key={`person${index}`}>
+                                {person.title}
+                            </StyledLi>
+                        )}
+                    </StyledUl>
+                </StyledDiv>
+                <StyledButton onClick={(e) => this.handleClick(e)}>Press Me</StyledButton>
+                <FrequencyDiv className='frequency'>
+                    <CharCount>
+                        <FrequencyTitle>Character</FrequencyTitle>
+                        {count.map((letter, index) => 
+                            <CountLi key={`letter${index}`}>
+                                {letter[0]}
+                            </CountLi>
+                        )}
+                    </CharCount>
+                    <NumberCount>
+                        <FrequencyTitle>Count</FrequencyTitle>
+                        {count.map((letter, index) => 
+                            <CountLi key={`letter${index}`}>
+                                {letter[1]}
+                            </CountLi>
+                        )}
+                    </NumberCount>
+                </FrequencyDiv>
+            </WrapperDiv>
+            : ''
+        )
+    }
+}
+
+export default PeoplePage;
