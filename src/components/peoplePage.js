@@ -24,11 +24,15 @@ class PeoplePage extends Component {
     componentDidMount = async () => {
         const data = await this.loadData();
         const emails = data.data;
+        //Initializing empty object to store frequency count for letters
         const counter = {}
+        //Initializing empty array to store new emails after regexing non-alphabetical chars
         const newEmails = [];
+        //Initializing empty array to store unique chars from each email
         const uniqueChar = [];
+        //Initializing empty array to store sorted array (descending order)
         const sortedArray = [];
-        //Regex'ing the non-alphabetic characters
+        //Regex'ing the non-alphabetical chars
         emails.forEach((person) => {
             const unique = person.email_address.replace(/\_|\@|\.+/g, '');
             newEmails.push(unique);
@@ -38,7 +42,9 @@ class PeoplePage extends Component {
             const hii = await this.uniqueLetters(email);
             uniqueChar.push(hii);
         })
+        //Calling setTimeout because of async function above
         setTimeout(() => {
+            //Loop to store frequency count of chars
             uniqueChar.forEach(async (person) => {
                 for (var i=0; i<person.length;i++) {
                     const character = person.charAt(i);
@@ -49,10 +55,11 @@ class PeoplePage extends Component {
                     }
                 }
             })
-
+            //Initial sort to sort in ascending order
             for (const letter in counter) {
                 sortedArray.push([letter, counter[letter]])
             }
+            //Final sort to sort in descending order
             const sorted = sortedArray.sort((a, b) => b[1] - a[1]);
 
             this.setState({ 
@@ -79,6 +86,7 @@ class PeoplePage extends Component {
         return data;
     }
 
+    //Function to get unique letters from regex'd emails
     uniqueLetters = async (string) => {
         let str = string;
         let newStr = '';
@@ -93,10 +101,14 @@ class PeoplePage extends Component {
     handleClick = async () => {
         const test = document.getElementsByClassName('frequency');
         if (!this.state.display) {
+            //Adding class appear when clicked
             test[0].classList.add('appear');
+            //Setting state to true so when clicked again, it will run else statement
             this.setState({ display: true })
         } else {
+            //Removing class appear when state is true
             test[0].classList.remove('appear');
+            //Setting state back to false so when clicked again, it will run if statement
             this.setState({ display: false })
         }
     }
